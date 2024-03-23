@@ -17,13 +17,16 @@ const chrImageArray = {
   chrRun1: "./img/dino01.png",
   chrRun2: "./img/dino02.png",
   chrJump: "./img/dino_jump.png",
-  chrgameover: "./img/dino_gameover.png"
+  chrgameover: "./img/dino_gameover.png",
 };
 
 // 敵キャラクター画像を配列に格納
 const enemyImageArray = {
   enemy01: "./img/saboten01.png",
   enemy02: "./img/saboten02.png",
+  enemy03: "./img/saboten03.png",
+  enemy04: "./img/putera01.png",
+  enemy05: "./img/putera02.png",
 };
 
 onload = function () {
@@ -80,8 +83,8 @@ function mainloop() {
 
 function update() {
   if (scene == Scenes.GameMain) {
-  // ゲームプレイ中
-    plsayGame();
+    // ゲーム実行中
+    playGame();
   } else if ( scene == Scenes.GameOver) {
     // ゲームオーバー
     characterImage.src = chrImageArray.chrgameover;
@@ -124,11 +127,10 @@ function draw() {
 }
 
 function playGame() {
-  // 自キャラjump処理
+  // ゲーム実行中
   speed = speed + acceleration;
   characterPosY = characterPosY + speed;
   if (characterPosY > 400) {
-    // 地面に着地
     characterPosY = 400;
     speed = 0;
     acceleration = 0;
@@ -136,14 +138,21 @@ function playGame() {
 
   // 敵表示
   enemyPosX = enemyPosX - (enemySpeed + enemyAccel);
+
   // 敵が画面左端に行ったら画面右端に戻る
   if (enemyPosX < 0) {
-    var rand = Math.floor(Math.random() * 3)
+    // ランダムでサボテンかトリ（プテラ）を表示
+    var rand = Math.floor(Math.random() * 5)
     if (rand == 1) {
       enemyImage.src = enemyImageArray.enemy01;
-    } else {
+    } else if (rand == 2) {
       enemyImage.src = enemyImageArray.enemy02;
+    } else if (rand == 3) {
+      enemyImage.src = enemyImageArray.enemy03;
+    } else if (rand == 4) {
+      enemyImage.src = enemyImageArray.enemy04;
     }
+
     enemyPosX = 720;
   }
 
@@ -162,14 +171,17 @@ function playGame() {
   if (frameCnt > 10) {
     frameCnt = 0;
   }
+
   // スコアカウンタ
   score++;
+
   // スコアが上がる毎に敵の速度を上げる
   enemyAccelCnt++;
   if (enemyAccelCnt > 200) {
     enemyAccelCnt = 0;
     enemyAccel++;
   }
+
   if (frameCnt <= 5) {
     if (characterPosY >= 400) {
       characterImage.src = chrImageArray.chrRun1;
@@ -177,6 +189,11 @@ function playGame() {
       // jump中
       characterImage.src = chrImageArray.chrJump;
     }
+
+    if (enemyImage.src == enemyImageArray.enemy05) {
+      enemyImage.src = enemyImageArray.enemy04;
+    }
+
   } else if (frameCnt <= 10) {
     if (characterPosY >= 400) {
       characterImage.src = chrImageArray.chrRun2;
@@ -184,5 +201,10 @@ function playGame() {
     // jump中
     characterImage.src = chrImageArray.chrJump;
     }
+
+    if (enemyImage.src == enemyImageArray.enemy04) {
+      enemyImage.src = enemyImageArray.enemy05;
+    }
+
   }
 }
