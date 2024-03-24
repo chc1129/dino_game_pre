@@ -1,9 +1,8 @@
 var canvas, g;
 var characterPosX, characterPosY, characterImage, charcterR;
-var enemyPosX, enemyPosY, enemyImage, enemySpeed, enemyR, enemyAccel, enemyAccelCnt;
+var enemyPosX, enemyPosY, enemyImage, enemySpeed, enemyR, enemyAccel, enemyAccelCnt, rand;
 var speed, acceleration;
-var frameCnt;
-var score;
+var frameCnt, score;
 var scene;
 
 // シーン定義
@@ -142,15 +141,34 @@ function playGame() {
   // 敵が画面左端に行ったら画面右端に戻る
   if (enemyPosX < 0) {
     // ランダムでサボテンかトリ（プテラ）を表示
-    var rand = Math.floor(Math.random() * 5)
+    rand = Math.floor(Math.random() * 5)
     if (rand == 1) {
+      // サボテン01
       enemyImage.src = enemyImageArray.enemy01;
+      enemyPosY = 400;
     } else if (rand == 2) {
+      // サボテン02
       enemyImage.src = enemyImageArray.enemy02;
+      enemyPosY = 400;
     } else if (rand == 3) {
+      // サボテン03
       enemyImage.src = enemyImageArray.enemy03;
+      enemyPosY = 410;
     } else if (rand == 4) {
+      // トリ（プテラ）
+      var eAddPosY, eRand;
+      eRand = Math.floor(Math.random() * 3)
+      // トリ高さ設定
+      switch (eRand) {
+        case 1:
+          eAddPosY = 0; break;
+        case 2:
+          eAddPosY = 50; break;
+        default: 
+          eAddPosY = 100; break;
+      }
       enemyImage.src = enemyImageArray.enemy04;
+      enemyPosY = 300 + eAddPosY;
     }
 
     enemyPosX = 720;
@@ -166,45 +184,51 @@ function playGame() {
     enemySpeed = 0;
   }
 
+  // スコアカウンタ
+  scoreCount();
   // フレームカウンタ
-  frameCnt++;
-  if (frameCnt > 10) {
-    frameCnt = 0;
+  frameCounter();
+
+    // dinoトコトコ
+  if (characterPosY < 400) {
+    // jump中
+    characterImage.src = chrImageArray.chrJump;
+  } else {
+    if (frameCnt <= 5) {
+      characterImage.src = chrImageArray.chrRun1;
+    } else {
+      characterImage.src = chrImageArray.chrRun2;
+    }
   }
 
+  // トリ（プテラ）パタパタ
+  if (frameCnt <= 5) {
+    if (rand == 4) {
+      enemyImage.src = enemyImageArray.enemy04;
+    }
+  } else {
+    if (rand == 4) {
+      enemyImage.src = enemyImageArray.enemy05;
+    }
+  }
+}
+
+function scoreCount() {
   // スコアカウンタ
   score++;
-
   // スコアが上がる毎に敵の速度を上げる
   enemyAccelCnt++;
   if (enemyAccelCnt > 200) {
     enemyAccelCnt = 0;
     enemyAccel++;
   }
+}
 
-  if (frameCnt <= 5) {
-    if (characterPosY >= 400) {
-      characterImage.src = chrImageArray.chrRun1;
-    } else {
-      // jump中
-      characterImage.src = chrImageArray.chrJump;
-    }
-
-    if (enemyImage.src == enemyImageArray.enemy05) {
-      enemyImage.src = enemyImageArray.enemy04;
-    }
-
-  } else if (frameCnt <= 10) {
-    if (characterPosY >= 400) {
-      characterImage.src = chrImageArray.chrRun2;
-    } else {
-    // jump中
-    characterImage.src = chrImageArray.chrJump;
-    }
-
-    if (enemyImage.src == enemyImageArray.enemy04) {
-      enemyImage.src = enemyImageArray.enemy05;
-    }
-
+function frameCounter() {
+  // フレームカウンタ
+  frameCnt++;
+  if (frameCnt > 10) {
+    // 10fでリセット
+    frameCnt = 0;
   }
 }
