@@ -1,9 +1,29 @@
 var canvas, g;
 var characterPosX, characterPosY, characterImage, charcterR;
+var player;
 var enemyPosX, enemyPosY, enemyImage, enemySpeed, enemyR, enemyAccel, enemyAccelCnt, rand;
 var speed, acceleration;
 var frameCnt, score;
 var scene;
+
+// Spriteクラス
+class Sprite {
+  image = null;
+  posx= 0;
+  posy = 0;
+  addposy = 0;
+  r = 0;
+  speed = 0;
+  acceleration = 0;
+
+  draw(g) {
+    g.drawImage (
+      this.image,
+      this.posx - this.image.width /2,
+      this.posy - this.image.height / 2
+    );
+  }
+}
 
 // シーン定義
 const Scenes = {
@@ -50,6 +70,14 @@ function init() {
   speed = 0;
   acceleration = 0;
 
+  player = new Sprite();
+  player.image = chrImageArray.chrRun1;
+  player.posx = 100;
+  player.posy = 400;
+  player.r = 16;
+  player.speed = 0;
+  player.acceleration = 0;
+
   // 敵設定
   enemyPosX = 720;
   enemyPosY = 400;
@@ -86,7 +114,8 @@ function update() {
     playGame();
   } else if ( scene == Scenes.GameOver) {
     // ゲームオーバー
-    characterImage.src = chrImageArray.chrgameover;
+    //characterImage.src = chrImageArray.chrgameover;
+    player.image.src = characterImage.chrgameover;
   }
 }
 
