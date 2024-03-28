@@ -6,6 +6,8 @@ var speed, acceleration;
 var frameCnt, score;
 var scene;
 
+
+
 // Spriteクラス
 class Sprite {
   image = null;
