@@ -1,12 +1,10 @@
 var canvas, g;
-var characterPosX, characterPosY, characterImage, charcterR;
 var player;
+var enemy;
 var enemyPosX, enemyPosY, enemyImage, enemySpeed, enemyR, enemyAccel, enemyAccelCnt, rand;
 var speed, acceleration;
 var frameCnt, score;
 var scene;
-
-
 
 // Spriteクラス
 class Sprite {
@@ -64,17 +62,10 @@ onload = function () {
 
 function init() {
   // 自キャラ設定
-  characterPosX = 100; // スタート位置
-  characterPosY = 400;
-  charcterR = 16;
-  characterImage = new Image();
-  characterImage.src = chrImageArray.chrRun1;
-  speed = 0;
-  acceleration = 0;
-
   player = new Sprite();
-  player.image = chrImageArray.chrRun1;
-  player.posx = 100;
+  player.image = new Image();
+  player.image.src = chrImageArray.chrRun1;
+  player.posx = 100; // スタート位置
   player.posy = 400;
   player.r = 16;
   player.speed = 0;
@@ -89,6 +80,15 @@ function init() {
   enemySpeed = 10;
   enemyAccel = enemyAccelCnt = 0;
 
+  enemy = new Sprite();
+  enemy.image = new Image();
+  enemy.image.src = enemyImageArray.enemy01;
+  enemy.posx = 720;
+  enemy.posy = 480;
+  enemy.r = 25;
+  enemy.speed = 10;
+  enemy.acceleration = 0;
+
   // ゲーム管理データ
   scene = Scenes.GameMain;
   // スコア初期化
@@ -100,8 +100,8 @@ function init() {
 function keydown(e) {
   // Space or "↓" or Enter 押下時
   if ((e.keyCode == 32) || (e.keyCode == 38) || (e.keyCode == 13)) {
-    speed = -23; // Y軸の移動速度
-    acceleration = 1.5; // 重力加速度  
+    player.speed = -23;
+    player.acceleration = 1.5;
   }
 }
 
@@ -116,8 +116,7 @@ function update() {
     playGame();
   } else if ( scene == Scenes.GameOver) {
     // ゲームオーバー
-    //characterImage.src = chrImageArray.chrgameover;
-    player.image.src = characterImage.chrgameover;
+    player.image.src = chrImageArray.chrgameover;
   }
 }
 
@@ -128,9 +127,9 @@ function draw() {
 
   // キャラクタ描画
   g.drawImage(
-    characterImage,
-    characterPosX - characterImage.width / 2,
-    characterPosY - characterImage.height / 2
+    player.image,
+    player.posx - player.image.width / 2,
+    player.posy - player.image.height / 2
   );
 
   // 敵描画
@@ -158,16 +157,17 @@ function draw() {
 
 function playGame() {
   // ゲーム実行中
-  speed = speed + acceleration;
-  characterPosY = characterPosY + speed;
-  if (characterPosY > 400) {
-    characterPosY = 400;
-    speed = 0;
-    acceleration = 0;
+  player.speed = player.speed + player.acceleration;
+  player.posy = player.posy + player.speed;
+  if (player.posy > 400) {
+    player.posy = 400;
+    player.speed = 0;
+    player.acceleration = 0;
   }
 
   // 敵表示
   enemyPosX = enemyPosX - (enemySpeed + enemyAccel);
+  //enemy.posx = enemy.posx - (enemy.speed + enemy.acceleration);
 
   // 敵が画面左端に行ったら画面右端に戻る
   if (enemyPosX < 0) {
@@ -205,11 +205,56 @@ function playGame() {
     enemyPosX = 720;
   }
 
+  /*
+  if (enemy.posx < 0) {
+    // ランダムでサボテンかトリ（プテラ）を表示
+    rand = Math.floor(Math.random() * 5)
+    switch (rand) {
+      case "1":
+        // サボテン01
+        enemy.image.src = enemyImageArray.enemy01;
+        enemy.posy = 400;
+        break;
+      case "2":
+        // サボテン02
+        enemy.image.src = enemyImageArray.enemy02;
+        enemy.posy = 400;
+        break;
+      case "3":
+        // サボテン03
+        enemy.image.src = enemyImageArray.enemy03;
+        enemy.posy = 410;
+        break;
+      case "4":
+        // トリ（プテラ）
+        var eAddPosY, eRand;
+        eRand = Math.floor(Math.random() * 3)
+        // トリの高さ設定
+        switch (eRand) {
+          case 1:
+            eAddPosY = 0;
+            break;
+          case 2:
+            eAddPosY = 50;
+            break;
+          default:
+            eAddPosY = 100;
+            break;
+        }
+        break;
+      default:
+        enemy.image.src = enemyImageArray.enemy01;
+        enemy.posy = 400;
+        break;
+    }
+  }
+  */
+
   // 当たり判定
-  var dx = characterPosX - enemyPosX;
-  var dy = characterPosY - enemyPosY;
+  var dx = player.posx - enemyPosX;
+  var dy = player.posy - enemyPosY;
   var dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist < charcterR + enemyR) {
+  if (dist < player.r + enemyR) {
     // Hit!!!
     scene = Scenes.GameOver;
     enemySpeed = 0;
@@ -220,15 +265,15 @@ function playGame() {
   // フレームカウンタ
   frameCounter();
 
-    // dinoトコトコ
-  if (characterPosY < 400) {
-    // jump中
-    characterImage.src = chrImageArray.chrJump;
+  // dinoトコトコ
+  if (player.posy < 400) {
+    // jump
+    player.image.src = chrImageArray.chrJump;
   } else {
     if (frameCnt <= 5) {
-      characterImage.src = chrImageArray.chrRun1;
+      player.image.src = chrImageArray.chrRun1;
     } else {
-      characterImage.src = chrImageArray.chrRun2;
+      player.image.src = chrImageArray.chrRun2;
     }
   }
 
@@ -253,6 +298,14 @@ function scoreCount() {
     enemyAccelCnt = 0;
     enemyAccel++;
   }
+
+  /*
+  enemyAccelCnt++;
+  if (enemyAccelCnt > 200) {
+    enemyAccelCnt = 0;
+    enemy.acceleration++;
+  }
+  */
 }
 
 function frameCounter() {
