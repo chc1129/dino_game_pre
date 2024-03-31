@@ -1,10 +1,11 @@
 var canvas, g;
 var player;
 var enemy;
-var enemyPosX, enemyPosY, enemyImage, enemySpeed, enemyR, enemyAccel, enemyAccelCnt, rand;
+var enemyAccelCnt, rand;
 var speed, acceleration;
 var frameCnt, score;
 var scene;
+var isKeyDown;
 
 // Spriteクラス
 class Sprite {
@@ -22,6 +23,24 @@ class Sprite {
       this.posx - this.image.width /2,
       this.posy - this.image.height / 2
     );
+  }
+}
+
+class EnemyAct extends Sprite {
+  constructor(image, posx, posy, addposy, r, speed, acceleration) {
+    super(image, posx, posy, addposy, r, speed, acceleration);
+    this.src = image;
+    this.posx = posx;
+    this.posy = posy;
+    this.addpos = addposy;
+    this.r = r;
+    this.speed = speed;
+    this.acceleration = acceleration;
+  }
+
+  update() {
+    // 敵キャラの状態更新
+    this.posx -= this.speed;
   }
 }
 
@@ -72,6 +91,7 @@ function init() {
   player.acceleration = 0;
 
   // 敵設定
+  /*
   enemy = new Sprite();
   enemy.image = new Image();
   enemy.image.src = enemyImageArray.enemy01;
@@ -81,6 +101,24 @@ function init() {
   enemy.speed = 10;
   enemy.acceleration = 0;
   enemyAccelCnt = 0;
+  */
+  enemy = [];
+  next = 10; // 敵キャラ生成タイミング（10frame数)
+
+  enemy.forEach((e) => {
+    e.update();
+    // 左端に到達でスコア増加
+    if (e.posx <= 0) {
+      score++;
+    }
+  });
+
+  // 左端に到達した敵キャラを除外
+  enemy = enemy.filter((e) => e.posx > 0);
+  // 敵キャラ生成
+  if (frameCnt == next) {
+    generateNextEnemy();
+  }
 
   // ゲーム管理データ
   scene = Scenes.GameMain;
@@ -119,18 +157,10 @@ function draw() {
   g.fillRect(0, 0, 720, 480);
 
   // キャラクタ描画
-  g.drawImage(
-    player.image,
-    player.posx - player.image.width / 2,
-    player.posy - player.image.height / 2
-  );
+  player.draw(g);
 
   // 敵描画
-  g.drawImage(
-    enemy.image,
-    enemy.posx - enemy.image.width / 2,
-    enemy.posy - enemy.image.height / 2
-  );
+  enemy.draw(g);
 
   // スコア描画
   g.fillStyle = "rgb(255,255,255)";
@@ -245,7 +275,6 @@ function playGame() {
       enemy.image.src = enemyImageArray.enemy05;
     }
   }
-
 
 }
 
