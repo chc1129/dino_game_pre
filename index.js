@@ -128,6 +128,20 @@ function init() {
   frameCnt = 0;
 }
 
+function generateNextEnemy() {
+  var Enemy = new Enemy(
+    600,
+    400 - (Math.random() < 0.5 ? 0 : 50),
+    12,
+    "./img/dino01.png",
+    5,
+    0
+  );
+  enemy.push(newEnemy);
+  // 次のenemy生成タイミング
+  next = Math.floor(frameCnt + 30 + 80 * Math.random());
+}
+
 function keydown(e) {
   // Space or "↓" or Enter 押下時
   if ((e.keyCode == 32) || (e.keyCode == 38) || (e.keyCode == 13)) {
