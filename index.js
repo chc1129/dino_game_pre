@@ -138,7 +138,7 @@ function generateNextEnemy() {
     0
   );
   enemy.push(newEnemy);
-  // 次のenemy生成タイミング
+  // 次のenemy生成タイミング　　　
   next = Math.floor(frameCnt + 30 + 80 * Math.random());
 }
 
