@@ -8,6 +8,9 @@ var scene;
 
 
 
+
+
+
 // Spriteクラス
 class Sprite {
   image = null;
