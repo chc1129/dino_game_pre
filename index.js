@@ -1,10 +1,9 @@
-var canvas, g;
-var player;
-var enemy;
-var enemyPosX, enemyPosY, enemyImage, enemySpeed, enemyR, enemyAccel, enemyAccelCnt, rand;
-var speed, acceleration;
-var frameCnt, score;
-var scene;
+let canvas, g;
+let player;
+let enemy;
+let enemyPosX, enemyPosY, enemyImage, enemySpeed, enemyR, enemyAccel, enemyAccelCnt, rand;
+let frameCnt, score;
+let scene;
 
 
 // Spriteクラス
@@ -17,13 +16,6 @@ class Sprite {
   speed = 0;
   acceleration = 0;
 
-  draw(g) {
-    g.drawImage (
-      this.image,
-      this.posx - this.image.width /2,
-      this.posy - this.image.height / 2
-    );
-  }
 }
 
 // シーン定義
@@ -149,20 +141,22 @@ function draw() {
   // スコア描画
   g.fillStyle = "rgb(255,255,255)";
   g.font = "16pt Arial Black";
-  var scoreLabel = "SCORE: " + score;
-	var scoreLabelWidth = g.measureText(scoreLabel).width;
+  let scoreLabel = "SCORE: " + score;
+	let scoreLabelWidth = g.measureText(scoreLabel).width;
 	g.fillText(scoreLabel, 700 - scoreLabelWidth, 40); // 表示文言,位置指定(x,y)
 
   if (scene === Scenes.GameOver) {
     // ゲームオーバー
     g.fillStyle = "rgb(255,255,255)";
     g.font = "24pt Arial Black";
-    var gameOverLabel = "GAME OVER!!!";
+    let gameOverLabel = "GAME OVER!!!";
     g.fillText(gameOverLabel, 250, 250);
   }
 }
 
 function playGame() {
+  let rand;
+
   // ゲーム実行中
   player.speed = player.speed + player.acceleration;
   player.posy = player.posy + player.speed;
