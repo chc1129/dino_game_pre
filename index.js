@@ -70,21 +70,21 @@ function init() {
   player.image = new Image();   // ← これを追加
   player.image.onload = () => {};
   player.image.src = chrImageArray.chrRun1;
-  player.posx = 100; // スタート位置
-  player.posy = 400;
-  player.r = 16;
-  player.speed = 0;
-  player.acceleration = 0;
+  player.posx = GameConfig.PLAYER_START_X; // スタート位置
+  player.posy = GameConfig.PLAYER_START_Y;
+  player.r = GameConfig.PLAYER_RADIUS;
+  player.speed = GameConfig.PLAYER_INITIAL_SPEED;
+  player.acceleration = GameConfig.PLAYER_INITIAL_ACCEL;
 
   // 敵設定
   enemy = new Sprite();
   enemy.image = new Image();
   enemy.image.src = enemyImageArray.enemy01;
-  enemy.posx = 720; // スタート位置
-  enemy.posy = 400;
-  enemy.r = 25;     // 敵の当たり判定半径
-  enemy.speed = 10; // 敵の初期速度
-  enemy.acceleration = 0; // 敵の加速度
+  enemy.posx = GameConfig.ENEMY_START_X; // スタート位置
+  enemy.posy = GameConfig.GROUND_LEVEL;
+  enemy.r = GameConfig.ENEMY_RADIUS;     // 敵の当たり判定半径
+  enemy.speed = GameConfig.ENEMY_INITIAL_SPEED; // 敵の初期速度
+  enemy.acceleration = GameConfig.ENEMY_ACCELERATION; // 敵の加速度
 
   // ゲーム管理データ
   scene = Scenes.GameMain;
@@ -96,16 +96,16 @@ function init() {
 
 function keydown(e) {
   // Space or "↑" or Enter 押下時（キーリピート防止）
-  if (!jumpPressed && (e.key === " " || e.key === "ArrowUp" || e.key === "Enter")) {
+  if (!jumpPressed && JUMP_KEYS.includes(e.key)) {
     jumpPressed = true;
-    player.speed = -23;
-    player.acceleration = 1.5;
+    player.speed = GameConfig.PLAYER_JUMP_SPEED;
+    player.acceleration = GameConfig.PLAYER_JUMP_ACCEL;
   }
 }
 
 function keyup(e) {
   // Space or "↑" or Enter 離上時
-  if (e.key === " " || e.key === "ArrowUp" || e.key === "Enter") {
+  if (JUMP_KEYS.includes(e.key)) {
     jumpPressed = false;
   }
 }
@@ -119,7 +119,7 @@ function update() {
   if (scene === Scenes.GameMain) {
     // ゲーム実行中
     playGame();
-  } else if ( scene == Scenes.GameOver) {
+  } else if ( scene === Scenes.GameOver) {
     // ゲームオーバー
     player.image.src = chrImageArray.chrgameover;
   }
@@ -128,7 +128,7 @@ function update() {
 function draw() {
   // 背景描画
   g.fillStyle = "rgb(200,200,200)";
-  g.fillRect(0, 0, 720, 480);
+  g.fillRect(0, 0, GameConfig.CANVAS_WIDTH, GameConfig.CANVAS_HEIGHT);
 
   // キャラクタ描画
   player.draw(g);
@@ -162,8 +162,8 @@ function playGame() {
   // ゲーム実行中
   player.speed = player.speed + player.acceleration;
   player.posy = player.posy + player.speed;
-  if (player.posy > 400) {
-    player.posy = 400;
+  if (player.posy > GameConfig.GROUND_LEVEL) {
+    player.posy = GameConfig.GROUND_LEVEL;
     player.speed = 0;
     player.acceleration = 0;
     jumpPressed = false;
@@ -178,15 +178,15 @@ function playGame() {
     rand = Math.floor(Math.random() * 5)
     if (rand <= 1) {
         enemy.image.src = enemyImageArray.enemy01;
-        enemy.posy = 400;
+        enemy.posy = GameConfig.GROUND_LEVEL;
     } else if (rand === 2) {
       // サボテン02
       enemy.image.src = enemyImageArray.enemy02;
-      enemy.posy = 400;
+      enemy.posy = GameConfig.GROUND_LEVEL;
     } else if (rand === 3) {
       // サボテン03
       enemy.image.src = enemyImageArray.enemy03;
-      enemy.posy = 410;
+      enemy.posy = GameConfig.GROUND_LEVEL + 10;
     } else if (rand === 4) {
       // トリ（プテラ）
       let eAddPosY, eRand;
@@ -201,7 +201,7 @@ function playGame() {
       enemy.posy = 300 + eAddPosY;
     }
 
-    enemy.posx = 720;
+    enemy.posx = GameConfig.CANVAS_WIDTH;
   }
 
 
@@ -221,7 +221,7 @@ function playGame() {
   frameCounter();
 
   // dinoトコトコ
-  if (player.posy < 400) {
+  if (player.posy < GameConfig.GROUND_LEVEL) {
     // jump
     player.image.src = chrImageArray.chrJump;
   } else {
@@ -233,7 +233,7 @@ function playGame() {
   }
 
   // トリ（プテラ）パタパタ
-  if (frameCnt <= 5) {
+  if (frameCnt <= GameConfig.FRAME_ANIMATION_THRESHOLD) {
     if (rand === 4) {
       enemy.image.src = enemyImageArray.enemy04;
     }
@@ -247,7 +247,7 @@ function playGame() {
 function scoreCount() {
   score++;
   // スコアが上がる毎に敵の速度を上げる
-  enemy.acceleration = score / 100000;
+  enemy.acceleration = score / GameConfig.ENEMY_ACCEL_FACTOR;
   enemy.speed = enemy.speed + enemy.acceleration;
 }
 
@@ -255,7 +255,7 @@ function scoreCount() {
 function frameCounter() {
   // フレームカウンタ
   frameCnt++;
-  if (frameCnt > 10) {
+  if (frameCnt > GameConfig.FRAME_COUNTER_RESET) {
     // 10fでリセット
     frameCnt = 0;
   }
