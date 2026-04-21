@@ -30,23 +30,6 @@ const Scenes = {
   GameOver: "GameOver",
 };
 
-// キャラクター画像を配列に格納
-const chrImageArray = {
-  chrRun1: "./img/dino01.png",
-  chrRun2: "./img/dino02.png",
-  chrJump: "./img/dino_jump.png",
-  chrgameover: "./img/dino_gameover.png",
-};
-
-// 敵キャラクター画像を配列に格納
-const enemyImageArray = {
-  enemy01: "./img/saboten01.png",
-  enemy02: "./img/saboten02.png",
-  enemy03: "./img/saboten03.png",
-  enemy04: "./img/putera01.png",
-  enemy05: "./img/putera02.png",
-};
-
 window.onload = function () {
   // 描画コンテキストの取得
   canvas = document.getElementById("gamecanvas");
@@ -154,7 +137,7 @@ function draw() {
     g.fillStyle = "rgb(255,255,255)";
     g.font = "24pt Arial Black";
     let gameOverLabel = "GAME OVER!!!";
-    g.fillText(gameOverLabel, 250, 250);
+    g.fillText(gameOverLabel, GameConfig.GAME_OVER_POS, GameConfig.GAME_OVER_POS);
   }
 }
 
@@ -233,13 +216,11 @@ function playGame() {
   }
 
   // トリ（プテラ）パタパタ
-  if (frameCnt <= GameConfig.FRAME_ANIMATION_THRESHOLD) {
-    if (rand === 4) {
-      enemy.image.src = enemyImageArray.enemy04;
-    }
-  } else {
-    if (rand === 4) {
-      enemy.image.src = enemyImageArray.enemy05;
+  if (enemy.isAnimated && enemy.type === 'pteranodon') { 
+    if (frameCnt <= GameConfig.FRAME_ANIMATION_THRESHOLD) {
+        enemy.image.src = EnemyImages['enemy04'];
+    } else {
+        enemy.image.src = EnemyImages['enemy05'];
     }
   }
 }
