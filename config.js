@@ -1,5 +1,5 @@
 const GameConfig = {
-  CANVAS_WIDTH: 720,
+  CANVAS_WIDTH: 1024,
   CANVAS_HEIGHT: 480,
   GROUND_LEVEL: 400,
   PLAYER_START_X: 100,
@@ -9,7 +9,7 @@ const GameConfig = {
   PLAYER_INITIAL_ACCEL: 0,
   PLAYER_JUMP_SPEED: -23,
   PLAYER_JUMP_ACCEL: 1.5,
-  ENEMY_START_X: 720,
+  ENEMY_START_X: 1024,
   ENEMY_RADIUS: 25,
   ENEMY_INITIAL_SPEED: 10,
   ENEMY_ACCELERATION: 0,
@@ -39,7 +39,7 @@ const EnemyTypes = {
     posY:410,
     isAnimated: false,
   },
-  putera: {
+  pteranodon: {
     name: 'プテラノドン',
     imageKey: 'enemy04',
     animImageKeys: 'enemy05',

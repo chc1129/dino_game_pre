@@ -26,6 +26,7 @@ class Sprite {
 
 // シーン定義
 const Scenes = {
+  Title: "Title",
   GameMain: "GameMain",
   GameOver: "GameOver",
 };
@@ -52,7 +53,7 @@ function init() {
   player = new Sprite();
   player.image = new Image();   // ← これを追加
   player.image.onload = () => {};
-  player.image.src = chrImageArray.chrRun1;
+  player.image.src = CharacterImages.chrRun1; // 画像の読み込み
   player.posx = GameConfig.PLAYER_START_X; // スタート位置
   player.posy = GameConfig.PLAYER_START_Y;
   player.r = GameConfig.PLAYER_RADIUS;
@@ -62,15 +63,17 @@ function init() {
   // 敵設定
   enemy = new Sprite();
   enemy.image = new Image();
-  enemy.image.src = enemyImageArray.enemy01;
+  enemy.image.src = EnemyImages.enemy01; // 画像の読み込み
   enemy.posx = GameConfig.ENEMY_START_X; // スタート位置
   enemy.posy = GameConfig.GROUND_LEVEL;
   enemy.r = GameConfig.ENEMY_RADIUS;     // 敵の当たり判定半径
   enemy.speed = GameConfig.ENEMY_INITIAL_SPEED; // 敵の初期速度
   enemy.acceleration = GameConfig.ENEMY_ACCELERATION; // 敵の加速度
+  enemy.type = 'cactus1';
+  enemy.isAnimated = false;
 
   // ゲーム管理データ
-  scene = Scenes.GameMain;
+  scene = Scenes.Title;
   // スコア初期化
   score = 0;
   // フレームカウンタ
@@ -78,11 +81,19 @@ function init() {
 }
 
 function keydown(e) {
-  // Space or "↑" or Enter 押下時（キーリピート防止）
-  if (!jumpPressed && JUMP_KEYS.includes(e.key)) {
-    jumpPressed = true;
-    player.speed = GameConfig.PLAYER_JUMP_SPEED;
-    player.acceleration = GameConfig.PLAYER_JUMP_ACCEL;
+  if (scene === Scenes.Title) {
+    // タイトル画面
+    if (e.key === " " || e.key === "Enter") {
+      scene = Scenes.GameMain; // ゲーム開始
+      return;
+    }
+  } else if (scene === Scenes.GameMain) {
+    // Space or "↑" or Enter 押下時（キーリピート防止）
+    if (!jumpPressed && JUMP_KEYS.includes(e.key)) {
+      jumpPressed = true;
+      player.speed = GameConfig.PLAYER_JUMP_SPEED;
+      player.acceleration = GameConfig.PLAYER_JUMP_ACCEL;
+    }
   }
 }
 
@@ -99,16 +110,51 @@ function mainloop() {
 }
 
 function update() {
-  if (scene === Scenes.GameMain) {
+  if (scene === Scenes.Title) {
+    // タイトル画面
+  } else if (scene === Scenes.GameMain) {
     // ゲーム実行中
     playGame();
   } else if ( scene === Scenes.GameOver) {
     // ゲームオーバー
-    player.image.src = chrImageArray.chrgameover;
+    player.image.src = CharacterImages.chrgameover;
   }
 }
 
 function draw() {
+  if (scene === Scenes.Title) {
+    // タイトル画面
+    drawTitle();
+    return;
+  } else if (scene === Scenes.GameMain) {
+    // ゲーム実行中
+    drawGame();
+    return;
+  } else if (scene === Scenes.GameOver) {
+    // ゲームオーバー
+    drawGameOver();
+    return;
+  }
+}
+
+function drawTitle() {
+  g.fillStyle = "rgb(200,200,200)";
+  g.fillRect(0, 0, GameConfig.CANVAS_WIDTH, GameConfig.CANVAS_HEIGHT);
+
+  // タイトル
+  g.fillStyle = "rgb(255,255,255)";  
+  g.font = "24pt Arial Black";
+  let titleLabel = "dino game";
+  let titleLabelWidth = g.measureText(titleLabel).width;
+  g.fillText(titleLabel, (GameConfig.CANVAS_WIDTH - titleLabelWidth) / 2, GameConfig.CANVAS_HEIGHT / 2 - 20);
+
+  g.font = "16pt Arial Black";
+  let startLabel = "スペースキーでスタート";
+  let startLabelWidth = g.measureText(startLabel).width;
+  g.fillText(startLabel, (GameConfig.CANVAS_WIDTH - startLabelWidth) / 2, GameConfig.CANVAS_HEIGHT / 2 + 20);
+}
+
+function drawGame() {
   // 背景描画
   g.fillStyle = "rgb(200,200,200)";
   g.fillRect(0, 0, GameConfig.CANVAS_WIDTH, GameConfig.CANVAS_HEIGHT);
@@ -123,22 +169,19 @@ function draw() {
   g.font = "16pt Arial Black";
   let scoreLabel = "SCORE: " + score;
   let scoreLabelWidth = g.measureText(scoreLabel).width;
-  g.fillText(scoreLabel, 700 - scoreLabelWidth, 40); // 表示文言,位置指定(x,y)
+  g.fillText(scoreLabel, GameConfig.CANVAS_WIDTH - scoreLabelWidth - 20, 40); // 表示文言,位置指定(x,y)  
+}
 
-  /*
-  // DEBUG: フレームカウンタ表示
-  let frameCntLabel = "Frame: " + frameCnt;
-  let frameCntLabelWidth = g.measureText(frameCntLabel).width;
-  g.fillText(frameCntLabel, 700 - frameCntLabelWidth, 60); // 表示文言,位置指定(x,y)
-  */
-
-  if (scene === Scenes.GameOver) {
+function drawGameOver() {
     // ゲームオーバー
     g.fillStyle = "rgb(255,255,255)";
     g.font = "24pt Arial Black";
     let gameOverLabel = "GAME OVER!!!";
-    g.fillText(gameOverLabel, GameConfig.GAME_OVER_POS, GameConfig.GAME_OVER_POS);
-  }
+    let gameOverLabelwidth = g.measureText(gameOverLabel).width;
+    g.fillText(gameOverLabel, (GameConfig.CANVAS_WIDTH - gameOverLabelwidth) / 2, GameConfig.CANVAS_HEIGHT / 2);
+
+    // キャラクタ描画
+    player.draw(g);
 }
 
 function playGame() {
@@ -157,33 +200,20 @@ function playGame() {
 
   // 敵が画面左端に行ったら画面右端に戻る
   if (enemy.posx < 0) {
-    // ランダムでサボテンかトリ（プテラ）を表示
-    rand = Math.floor(Math.random() * 5)
-    if (rand <= 1) {
-        enemy.image.src = enemyImageArray.enemy01;
-        enemy.posy = GameConfig.GROUND_LEVEL;
-    } else if (rand === 2) {
-      // サボテン02
-      enemy.image.src = enemyImageArray.enemy02;
-      enemy.posy = GameConfig.GROUND_LEVEL;
-    } else if (rand === 3) {
-      // サボテン03
-      enemy.image.src = enemyImageArray.enemy03;
-      enemy.posy = GameConfig.GROUND_LEVEL + 10;
-    } else if (rand === 4) {
-      // トリ（プテラ）
-      let eAddPosY, eRand;
-      eRand = Math.floor(Math.random() * 3)
-      // トリ高さ設定
-      switch (eRand) {
-        case 1: eAddPosY = 0; break;
-        case 2: eAddPosY = 50; break;
-        default: eAddPosY = 100; break;
-      }
-      enemy.image.src = enemyImageArray.enemy04;
-      enemy.posy = 300 + eAddPosY;
-    }
+    // ENEMY_SPAWN_TABLEから敵の種類をランダムに選択
+    rand = Math.floor(Math.random() * ENEMY_SPAWN_TABLE.length);
+    const enemyTypeKey = ENEMY_SPAWN_TABLE[rand];
+    const enemyType = EnemyTypes[enemyTypeKey];
 
+    enemy.type = enemyTypeKey;
+    enemy.image.src = EnemyImages[enemyType.imageKey];
+    enemy.posy = enemyType.posY;
+    enemy.isAnimated = enemyType.isAnimated;
+     // プテラノドンの場合は高さをランダムに設定
+    if (enemyType.isAnimated) {
+      const randIndex = Math.floor(Math.random() * enemyType.posYList.length);
+      enemy.posy = enemyType.posYList[randIndex];
+    }
     enemy.posx = GameConfig.CANVAS_WIDTH;
   }
 
@@ -206,21 +236,21 @@ function playGame() {
   // dinoトコトコ
   if (player.posy < GameConfig.GROUND_LEVEL) {
     // jump
-    player.image.src = chrImageArray.chrJump;
+    player.image.src = CharacterImages.chrJump;
   } else {
     if (frameCnt <= 5) {
-      player.image.src = chrImageArray.chrRun1;
+      player.image.src = CharacterImages.chrRun1;
     } else {
-      player.image.src = chrImageArray.chrRun2;
+      player.image.src = CharacterImages.chrRun2;
     }
   }
 
   // トリ（プテラ）パタパタ
   if (enemy.isAnimated && enemy.type === 'pteranodon') { 
-    if (frameCnt <= GameConfig.FRAME_ANIMATION_THRESHOLD) {
-        enemy.image.src = EnemyImages['enemy04'];
+    if (frameCnt <= 5) {
+        enemy.image.src = EnemyImages.enemy04;
     } else {
-        enemy.image.src = EnemyImages['enemy05'];
+        enemy.image.src = EnemyImages.enemy05;
     }
   }
 }
