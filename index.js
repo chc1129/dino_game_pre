@@ -1,6 +1,6 @@
 let canvas, g;
 let player;
-let enemy;
+let enemies = [];
 let frameCnt, score, rand;
 let scene;
 let jumpPressed = false;
@@ -61,7 +61,28 @@ function init() {
   player.acceleration = GameConfig.PLAYER_INITIAL_ACCEL;
 
   // 敵設定
-  enemy = new Sprite();
+  enemies = [];
+  const enemyStartPositions = [
+    GameConfig.ENEMY_START_X,
+    GameConfig.ENEMY_START_X + 400
+  ];
+
+  enemyStartPositions.forEach((startX) => {
+    const enemy = new Sprite();
+    enemy.image = new Image();
+    enemy.image.src = EnemyImages.enemy01; // 画像の読み込み
+    enemy.posx = startX;
+    enemy.posy = GameConfig.GROUND_LEVEL;
+    enemy.r = GameConfig.ENEMY_RADIUS;     // 敵の当たり判定半径
+    enemy.speed = GameConfig.ENEMY_INITIAL_SPEED; // 敵の初期速度
+    enemy.acceleration = GameConfig.ENEMY_ACCELERATION;
+    enemy.type = 'cactus1';
+    enemy.isAnimated = false;
+    enemies.push(enemy);
+  });
+
+  /*
+  let enemy = new Sprite();
   enemy.image = new Image();
   enemy.image.src = EnemyImages.enemy01; // 画像の読み込み
   enemy.posx = GameConfig.ENEMY_START_X; // スタート位置
@@ -71,6 +92,7 @@ function init() {
   enemy.acceleration = GameConfig.ENEMY_ACCELERATION; // 敵の加速度
   enemy.type = 'cactus1';
   enemy.isAnimated = false;
+  */
 
   // ゲーム管理データ
   scene = Scenes.Title;
@@ -162,7 +184,10 @@ function drawGame() {
   // キャラクタ描画
   player.draw(g);
   // 敵描画
-  enemy.draw(g);
+  enemies.forEach(enemy => {
+    enemy.draw(g);
+  });
+  //enemy.draw(g);
 
   // スコア描画
   g.fillStyle = "rgb(255,255,255)";
@@ -195,6 +220,28 @@ function playGame() {
     jumpPressed = false;
   }
 
+  // 敵の表示
+  enemies.forEach((enemy) => {
+    enemy.posx = enemy.posx - (enemy.speed + enemy.acceleration); // 敵の位置更新
+
+    if (enemy.posx < 0) {
+      const rand = Math.floor(Math.random() * ENEMY_SPAWN_TABLE.length);
+      const enemyTypeKey = ENEMY_SPAWN_TABLE[rand];
+      const enemyType = EnemyTypes[enemyTypeKey];
+
+      enemy.type = enemyTypeKey;
+      enemy.image.src = EnemyImages[enemyType.imageKey];
+      enemy.posy = enemyType.posY;
+      enemy.isAnimated = enemyType.isAnimated;
+
+      if (enemyType.isAnimated) {
+        const randIndex = Math.floor(Math.random() * enemyType.posYList.length);
+        enemy.posy = enemyType.posYList[randIndex];
+      }
+
+      enemy.posx = GameConfig.CANVAS_WIDTH;
+    }
+/*
   // 敵表示
   enemy.posx = enemy.posx - (enemy.speed + enemy.acceleration); // 敵の位置更新
 
@@ -215,18 +262,22 @@ function playGame() {
       enemy.posy = enemyType.posYList[randIndex];
     }
     enemy.posx = GameConfig.CANVAS_WIDTH;
-  }
+  */
+  
+    // 当たり判定
+    const dx = player.posx - enemy.posx;
+    const dy = player.posy - enemy.posy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < player.r + enemy.r) {
+      // Hit!!!
+      scene = Scenes.GameOver;
+      enemy.speed = 0;
+    }
 
-
-  // 当たり判定
-  let dx = player.posx - enemy.posx;
-  let dy = player.posy - enemy.posy;
-  let dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist < player.r + enemy.r) {
-    // Hit!!!
-    scene = Scenes.GameOver;
-    enemy.speed = 0;
-  }
+    if (enemy.isAnimated && enemy.type === 'pteranodon') {
+      enemy.image.src = frameCnt <= 5 ? EnemyImages.enemy04 : EnemyImages.enemy05;
+    }
+  });
 
   // スコアカウンタ
   scoreCount();
