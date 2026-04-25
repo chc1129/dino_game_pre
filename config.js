@@ -12,6 +12,7 @@ const GameConfig = {
   ENEMY_START_X: 1024,
   ENEMY_RADIUS: 25,
   ENEMY_INITIAL_SPEED: 10,
+  ENEMY_MAX_SPEED: 25,  // 敵の最大速度
   ENEMY_ACCELERATION: 0,
   ENEMY_ACCEL_FACTOR: 100000,
   FRAME_COUNTER_RESET:10,
@@ -74,3 +75,10 @@ const EnemyImages = {
 };
 
 const JUMP_KEYS = [" ", "ArrowUp", "Enter"];
+
+// 地面画像を配列に格納
+const GroundImages = {
+  ground1: "./img/ground01.png",
+  ground2: "./img/ground02.png",
+  ground3: "./img/ground03.png",
+};
