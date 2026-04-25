@@ -4,7 +4,9 @@ let enemies = [];
 let frameCnt, score, rand;
 let scene;
 let jumpPressed = false;
-let ground;
+let grounds = []; // 地面画像の配列
+let currentGroundIndex = 0; // 現在選択されている地面のインデックス
+let groundScrollX = 0; // 地面のスクロール位置（X座標）
 
 // Spriteクラス
 class Sprite {
@@ -64,8 +66,8 @@ function init() {
   // 敵設定
   enemies = [];
   const enemyStartPositions = [
-    GameConfig.ENEMY_START_X,
-    GameConfig.ENEMY_START_X + 400
+    GameConfig.ENEMY_START_X, // 1体目の敵の開始x座標
+    GameConfig.ENEMY_START_X + 400, // 2体目の敵の開始x座標
   ];
 
   enemyStartPositions.forEach((startX) => {
@@ -83,12 +85,24 @@ function init() {
     enemies.push(enemy);
   });
 
-  // ゲーム地面設定
-  ground = new Sprite();
-  ground.image = new Image();
-  ground.image.src = GroundImages.ground1;
-  ground.posx = 0; // 地面の位置（左端）
-  ground.posy = GameConfig.GROUND_LEVEL + 20; // 地面の位置（プレイヤーの下）
+    // ゲーム地面設定（3種類を配列で管理）
+  const groundKeys = ['ground1', 'ground2', 'ground3'];
+  groundKeys.forEach(key => {
+    const ground = new Sprite();
+    ground.image = new Image();
+    ground.image.src = GroundImages[key];
+    ground.posx = 0;
+    ground.posy = GameConfig.GROUND_LEVEL + 20;
+    // 地面も敵と同じ速度で移動（スクロール用）
+    ground.speed = GameConfig.ENEMY_INITIAL_SPEED;
+    ground.acceleration = GameConfig.ENEMY_ACCELERATION;
+    grounds.push(ground);
+  });
+
+  // ゲーム開始時に地面をランダムで1つ選択
+  currentGroundIndex = Math.floor(Math.random() * grounds.length);
+  // スクロール位置を初期化
+  groundScrollX = 0;
 
 
   // ゲーム管理データ
@@ -213,14 +227,21 @@ function drawGameOver() {
 }
 
 function drawGround() {
-  const tileCounet = Math.ceil(GameConfig.CANVAS_WIDTH / ground.image.width) + 1;
+  // 選択された地面を使用
+  const currentGround = grounds[1];
+  // 画面幅を埋める所需的画像枚数を計算（+2で两端の切れ目をカバー）
+  const tileCount = Math.ceil(GameConfig.CANVAS_WIDTH / currentGround.image.width) + 2;
 
-  for (let i = 0; i < tileCounet; i++) {
+  // スクロール位置から開始して、画面幅分以上描画
+  for (let i = 0; i < tileCount; i++) {
     g.drawImage(
-      ground.image,
-      i * ground.image.width,
-      ground.posy - ground.image.height / 2
+      currentGround.image,
+      // X座標: スクロール位置 + (画像幅 × 何枚目か)
+      groundScrollX + (i * currentGround.image.width),
+      // Y座標: 地面の位置 - 画像高さの半分（中心基準のため）
+      currentGround.posy - currentGround.image.height / 2
     );
+
   }
 }
 
@@ -236,13 +257,22 @@ function playGame() {
     jumpPressed = false;
   }
 
-  // 敵の表示
+  // 地面のスクロール更新（敵と同じ速度で左に移動）
+  const currentGround = grounds[currentGroundIndex];
+  // 地面の位置を左にスクロール（敵と同じ速度計算）
+  groundScrollX -= (currentGround.speed + currentGround.acceleration);
+  // 画面幅分以上スクロールしたらリセット（ループ効果）
+  if (groundScrollX <= -currentGround.image.width) {
+    groundScrollX = 0;
+  }
+
+
   enemies.forEach((enemy) => {
     enemy.posx = enemy.posx - (enemy.speed + enemy.acceleration); // 敵の位置更新
 
     if (enemy.posx < 0) {
-      // 出現間隔をランダムに選択（250, 300, 400）
-      const intervals = [250, 300, 400];
+      // 出現間隔をランダムに選択（300, 400, 600）
+      const intervals = [300, 400, 600];
       enemy.interval = intervals[Math.floor(Math.random() * intervals.length)];
 
       const rand = Math.floor(Math.random() * ENEMY_SPAWN_TABLE.length);
@@ -328,6 +358,15 @@ function scoreCount() {
       enemy.speed = GameConfig.ENEMY_MAX_SPEED;
     }
   });
+
+  // 地面も敵と同じ速度で更新
+  const currentGround = grounds[currentGroundIndex];
+  currentGround.acceleration = score / GameConfig.ENEMY_ACCEL_FACTOR;
+  currentGround.speed = currentGround.speed + currentGround.acceleration;
+  // 地面も速度上限を適用
+  if (currentGround.speed > GameConfig.ENEMY_MAX_SPEED) {
+    currentGround.speed = GameConfig.ENEMY_MAX_SPEED;
+  }
 }
 
 
