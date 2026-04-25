@@ -4,6 +4,7 @@ let enemies = [];
 let frameCnt, score, rand;
 let scene;
 let jumpPressed = false;
+let ground;
 
 // Spriteクラス
 class Sprite {
@@ -51,7 +52,7 @@ function loop() {
 function init() {
   // 自キャラ設定
   player = new Sprite();
-  player.image = new Image();   // ← これを追加
+  player.image = new Image();
   player.image.onload = () => {};
   player.image.src = CharacterImages.chrRun1; // 画像の読み込み
   player.posx = GameConfig.PLAYER_START_X; // スタート位置
@@ -82,7 +83,13 @@ function init() {
     enemies.push(enemy);
   });
 
-  }
+  // ゲーム地面設定
+  ground = new Sprite();
+  ground.image = new Image();
+  ground.image.src = GroundImages.ground1;
+  ground.posx = 0; // 地面の位置（左端）
+  ground.posy = GameConfig.GROUND_LEVEL + 20; // 地面の位置（プレイヤーの下）
+
 
   // ゲーム管理データ
   scene = Scenes.Title;
@@ -129,7 +136,6 @@ function update() {
     playGame();
   } else if ( scene === Scenes.GameOver) {
     // ゲームオーバー
-    player.image.src = CharacterImages.chrgameover;
   }
 }
 
@@ -171,6 +177,9 @@ function drawGame() {
   g.fillStyle = "rgb(200,200,200)";
   g.fillRect(0, 0, GameConfig.CANVAS_WIDTH, GameConfig.CANVAS_HEIGHT);
 
+  // 地面描画
+  drawGround();
+
   // キャラクタ描画
   player.draw(g);
   // 敵描画
@@ -187,17 +196,34 @@ function drawGame() {
 }
 
 function drawGameOver() {
-    // ゲームオーバー
+    // ゲームオーバー用のキャラクタ画像を事前に読み込み
+    const gameOverImg = new Image();
+    gameOverImg.src = CharacterImages.chrgameover;
+    
+    // ゲームオーバー画面描画
     g.fillStyle = "rgb(255,255,255)";
     g.font = "24pt Arial Black";
     let gameOverLabel = "GAME OVER!!!";
     let gameOverLabelwidth = g.measureText(gameOverLabel).width;
     g.fillText(gameOverLabel, (GameConfig.CANVAS_WIDTH - gameOverLabelwidth) / 2, GameConfig.CANVAS_HEIGHT / 2);
 
-    // ゲームオーバー用のキャラクタ画像を表示
-    player.image.src = CharacterImages.chrgameover;
+    // ゲームオーバー用のキャラクタ画像を描画
+    player.image = gameOverImg;
     player.draw(g);
 }
+
+function drawGround() {
+  const tileCounet = Math.ceil(GameConfig.CANVAS_WIDTH / ground.image.width) + 1;
+
+  for (let i = 0; i < tileCounet; i++) {
+    g.drawImage(
+      ground.image,
+      i * ground.image.width,
+      ground.posy - ground.image.height / 2
+    );
+  }
+}
+
 
 function playGame() {
   // ゲーム実行中
@@ -251,6 +277,10 @@ function playGame() {
       // Hit!!!
       scene = Scenes.GameOver;
       enemy.speed = 0;
+      enemy.acceleration = 0;
+
+      player.speed = 0;
+      player.acceleration = 0;
     }
 
     if (enemy.isAnimated && enemy.type === 'pteranodon') {
