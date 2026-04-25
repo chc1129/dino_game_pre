@@ -12,11 +12,11 @@ const GameConfig = {
   ENEMY_START_X: 1024,
   ENEMY_RADIUS: 25,
   ENEMY_INITIAL_SPEED: 10,
-  ENEMY_MAX_SPEED: 15,  // 敵の最大速度
+  ENEMY_MAX_SPEED: 30,  // 敵の最大速度
   ENEMY_ACCELERATION: 0,
-  ENEMY_ACCEL_FACTOR: 100000,
+  ENEMY_ACCEL_FACTOR: 200,
   FRAME_COUNTER_RESET:10,
-  FRAME_ANIMATION_THRESHOLD:5,
+  FRAME_ANIMATION_THRESHOLD:6,
   GAME_OVER_POS:250,
 };
 
@@ -81,4 +81,19 @@ const GroundImages = {
   ground1: "./img/ground01.png",
   ground2: "./img/ground02.png",
   ground3: "./img/ground03.png",
+};
+
+// 雲画像を配列に格納
+const CloudImages = {
+  cloud1: "./img/cloud01.png",
+};
+
+// 雲の設定
+const CloudConfig = {
+  MAX_CLOUDS: 4,     // 1画面に表示する最大雲数
+  SPEED: 0.5,        // 雲のスクロール速度
+  MIN_Y: 250,        // 雲の出現y座標の最小値
+  MAX_Y: 300,        // 雲の出現y座標の最大値
+  MIN_INTERVAL: 400, // 最小生成間隔
+  MAX_INTERVAL: 800, // 最大生成間隔
 };

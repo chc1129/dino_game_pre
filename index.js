@@ -1,19 +1,23 @@
 let canvas, g;
 let player;
 let enemies = [];
+let gameOverImg;
+
 let frameCnt, score, rand;
 let scene;
 let jumpPressed = false;
-let grounds = []; // 地面画像の配列
-let currentGroundIndex = 0; // 現在選択されている地面のインデックス
-let groundScrollX = 0; // 地面のスクロール位置（X座標）
+
+let groundTiles = []; // 1画面分の地面画像配列
+let groundTileWidth = 0; // 地面画像の幅
+
+let clouds = []; // 雲の配列
+
 
 // Spriteクラス
 class Sprite {
   image = null;
   posx= 0;
   posy = 0;
-  addposy = 0;
   r = 0;
   speed = 0;
   acceleration = 0;
@@ -42,6 +46,7 @@ window.onload = function () {
   init();
   // 入力処理の指定
   document.onkeydown = keydown;
+  document.onkeyup = keyup;
   // ゲームループの設定 60FPS(16ms)
   loop();
 };
@@ -62,6 +67,7 @@ function init() {
   player.r = GameConfig.PLAYER_RADIUS;
   player.speed = GameConfig.PLAYER_INITIAL_SPEED;
   player.acceleration = GameConfig.PLAYER_INITIAL_ACCEL;
+
 
   // 敵設定
   enemies = [];
@@ -85,25 +91,15 @@ function init() {
     enemies.push(enemy);
   });
 
-    // ゲーム地面設定（3種類を配列で管理）
-  const groundKeys = ['ground1', 'ground2', 'ground3'];
-  groundKeys.forEach(key => {
-    const ground = new Sprite();
-    ground.image = new Image();
-    ground.image.src = GroundImages[key];
-    ground.posx = 0;
-    ground.posy = GameConfig.GROUND_LEVEL + 20;
-    // 地面も敵と同じ速度で移動（スクロール用）
-    ground.speed = GameConfig.ENEMY_INITIAL_SPEED;
-    ground.acceleration = GameConfig.ENEMY_ACCELERATION;
-    grounds.push(ground);
-  });
+  // ゲームオーバー用のキャラクタ画像を事前に読み込み
+  gameOverImg = new Image();
+  gameOverImg.src = CharacterImages.chrgameover;
 
-  // ゲーム開始時に地面をランダムで1つ選択
-  currentGroundIndex = Math.floor(Math.random() * grounds.length);
-  // スクロール位置を初期化
-  groundScrollX = 0;
+  // 雲設定
+  initClouds();
 
+  // 地面タイル設定
+  initGround();
 
   // ゲーム管理データ
   scene = Scenes.Title;
@@ -112,6 +108,70 @@ function init() {
   // フレームカウンタ
   frameCnt = 0;
 }
+
+
+function initGround() {
+  // ground初期化処理
+  groundTiles = [];
+  groundTileWidth = 40;
+
+  // groundのキー一覧を配列化
+  const groundKeys = Object.keys(GroundImages);
+
+  // 1画面分(CANVAS_WIDTH)を埋めるタイル数を計算
+  // 画面幅をタイル幅で割り、端数を切り上げて必要なタイル数を計算。
+  // さらに、最低でも26タイルは必要（CANVAS_WIDTH=1024, groundTileWidth=40の場合）
+  const tileCount = Math.max((Math.ceil(GameConfig.CANVAS_WIDTH / groundTileWidth) + 1), 26);  
+
+  for (let i = 0; i < tileCount; i++) {
+    const randkey = groundKeys[Math.floor(Math.random() * groundKeys.length)];
+    const img = new Image();
+    img.src = GroundImages[randkey];
+    groundTiles.push({
+      image: img,
+      posx: i * groundTileWidth,
+      posy: GameConfig.GROUND_LEVEL, // 地面の位置に合わせて調整
+    });
+  }
+}
+
+
+function initClouds() {
+  // 雲初期化処理
+  clouds = [];
+
+  // 雲画像のロード
+  const cloudImg = new Image();
+  cloudImg.src = CloudImages.cloud1;
+
+  // 1つ目の雲のx座標をランダムに設定
+  let currentPosX = Math.random() * GameConfig.CANVAS_WIDTH;
+
+  // MAX_CLOUDS数の雲をランダムな位置に配置
+  for (let i = 0; i < CloudConfig.MAX_CLOUDS; i++) {
+    // 出現位置をランダムに設定
+    const interval = CloudConfig.MIN_INTERVAL +
+      Math.random() * (CloudConfig.MAX_INTERVAL - CloudConfig.MIN_INTERVAL);
+
+    // 初期X座標は画面内にランダム配置
+    const posx = Math.random() * GameConfig.CANVAS_WIDTH;
+
+    // 出現y座標をランダムに設定
+    const posy = CloudConfig.MIN_Y +
+      Math.random() * (CloudConfig.MAX_Y - CloudConfig.MIN_Y);
+
+    clouds.push({
+      image: cloudImg,
+      posx: currentPosX, // 初期X座標は画面内にランダム配置
+      posy: posy,
+      interval: interval,
+    });
+    // 次の雲のX座標は現在のX座標からinterval分ズラす
+    currentPosX += interval;
+  }
+}
+
+
 
 function keydown(e) {
   if (scene === Scenes.Title) {
@@ -122,7 +182,10 @@ function keydown(e) {
     }
   } else if (scene === Scenes.GameMain) {
     // Space or "↑" or Enter 押下時（キーリピート防止）
-    if (!jumpPressed && JUMP_KEYS.includes(e.key)) {
+    if (!jumpPressed &&
+        player.posy >= GameConfig.GROUND_LEVEL &&
+        JUMP_KEYS.includes(e.key)) {
+      
       jumpPressed = true;
       player.speed = GameConfig.PLAYER_JUMP_SPEED;
       player.acceleration = GameConfig.PLAYER_JUMP_ACCEL;
@@ -163,11 +226,15 @@ function draw() {
     drawGame();
     return;
   } else if (scene === Scenes.GameOver) {
+    // 一度ゲーム実行画面を描画してから
+    // ゲームオーバー画面を描画し、player画像のズレを防ぐ
+    drawGame();
     // ゲームオーバー
     drawGameOver();
     return;
   }
 }
+
 
 function drawTitle() {
   g.fillStyle = "rgb(200,200,200)";
@@ -186,11 +253,15 @@ function drawTitle() {
   g.fillText(startLabel, (GameConfig.CANVAS_WIDTH - startLabelWidth) / 2, GameConfig.CANVAS_HEIGHT / 2 + 20);
 }
 
+
+
 function drawGame() {
   // 背景描画
   g.fillStyle = "rgb(200,200,200)";
   g.fillRect(0, 0, GameConfig.CANVAS_WIDTH, GameConfig.CANVAS_HEIGHT);
 
+  // 雲描画
+  drawClouds();
   // 地面描画
   drawGround();
 
@@ -209,11 +280,9 @@ function drawGame() {
   g.fillText(scoreLabel, GameConfig.CANVAS_WIDTH - scoreLabelWidth - 20, 40); // 表示文言,位置指定(x,y)  
 }
 
+
+
 function drawGameOver() {
-    // ゲームオーバー用のキャラクタ画像を事前に読み込み
-    const gameOverImg = new Image();
-    gameOverImg.src = CharacterImages.chrgameover;
-    
     // ゲームオーバー画面描画
     g.fillStyle = "rgb(255,255,255)";
     g.font = "24pt Arial Black";
@@ -226,28 +295,95 @@ function drawGameOver() {
     player.draw(g);
 }
 
+
 function drawGround() {
-  // 選択された地面を使用
-  const currentGround = grounds[1];
-  // 画面幅を埋める所需的画像枚数を計算（+2で两端の切れ目をカバー）
-  const tileCount = Math.ceil(GameConfig.CANVAS_WIDTH / currentGround.image.width) + 2;
-
-  // スクロール位置から開始して、画面幅分以上描画
-  for (let i = 0; i < tileCount; i++) {
-    g.drawImage(
-      currentGround.image,
-      // X座標: スクロール位置 + (画像幅 × 何枚目か)
-      groundScrollX + (i * currentGround.image.width),
-      // Y座標: 地面の位置 - 画像高さの半分（中心基準のため）
-      currentGround.posy - currentGround.image.height / 2
-    );
-
-  }
+  // 地面タイルを描画
+  groundTiles.forEach(tile => {
+    // 画像が読み込まれているか確認
+    if (tile.image.complete) {
+      g.drawImage(tile.image, 
+        tile.posx, 
+        tile.posy
+      );
+    }
+  });
 }
+
+function updateGround() {
+  // groundのキー一覧を配列化
+  const groundKeys = Object.keys(GroundImages);
+
+  groundTiles.forEach(tile => {
+    // enemyと同じ速度で地面タイルをスクロール
+    const scrollSpeed = enemies[0].speed + enemies[0].acceleration; // 敵の速度を取得
+    tile.posx -= scrollSpeed;
+
+    // タイルが画面左端から完全に出たら、右端に新しいタイルを追加
+    if (tile.posx + groundTileWidth < 0) {
+      // 現在のタイルの中で最も右にあるタイルを見つける
+      const maxPosX = Math.max(...groundTiles.map(t => t.posx));
+      // 最右端のタイルの右隣りに新しいタイルを配置
+      tile.posx = maxPosX + groundTileWidth;
+      // 新しいタイルをランダムで選択
+      const randkey = groundKeys[Math.floor(Math.random() * groundKeys.length)];
+      tile.image = new Image();
+      tile.image.src = GroundImages[randkey];
+    }
+  });
+}
+
+
+function drawClouds() {
+  clouds.forEach(cloud => {
+    // 画像が読み込まれているか確認
+    if (cloud.image.complete) {
+      g.drawImage(cloud.image, 
+        cloud.posx, 
+        cloud.posy
+      );
+    }
+  });
+}
+
+
+function updateClouds() {
+  clouds.forEach(cloud => {
+    // 雲をスクロール（固定速度）
+    cloud.posx -= CloudConfig.SPEED;
+
+    // 画像ロード完了済みの場合はwidthを使用、未ロード時は0として扱う
+    const imageWidth = cloud.image.complete ? cloud.image.width : 0;
+
+    // 雲が画面左端から完全に出たら、右端に新しい雲を追加
+    if (cloud.posx + cloud.image.width < 0) {
+
+      // 現在の雲の中で最も右にある雲を見つける
+      const maxPosX = Math.max(...clouds.map(c => c.posx));
+
+      // 出現間隔をランダムに再設定
+      const interval = CloudConfig.MIN_INTERVAL +
+        Math.random() * (CloudConfig.MAX_INTERVAL - CloudConfig.MIN_INTERVAL);
+
+      // 再出現位置は画面右端から固定で出現
+      cloud.posx = Math.max(maxPosX + interval, GameConfig.CANVAS_WIDTH) + interval;
+
+      // 出現y座標をランダムに設定
+      cloud.posy = CloudConfig.MIN_Y +
+        Math.random() * (CloudConfig.MAX_Y - CloudConfig.MIN_Y);
+
+      // 次回の出現間隔を保持
+      cloud.interval = interval;
+    }
+  });
+}
+
+
 
 
 function playGame() {
   // ゲーム実行中
+
+  // プレイヤーの移動
   player.speed = player.speed + player.acceleration;
   player.posy = player.posy + player.speed;
   if (player.posy > GameConfig.GROUND_LEVEL) {
@@ -257,16 +393,7 @@ function playGame() {
     jumpPressed = false;
   }
 
-  // 地面のスクロール更新（敵と同じ速度で左に移動）
-  const currentGround = grounds[currentGroundIndex];
-  // 地面の位置を左にスクロール（敵と同じ速度計算）
-  groundScrollX -= (currentGround.speed + currentGround.acceleration);
-  // 画面幅分以上スクロールしたらリセット（ループ効果）
-  if (groundScrollX <= -currentGround.image.width) {
-    groundScrollX = 0;
-  }
-
-
+  // 敵の出現、移動、当たり判定
   enemies.forEach((enemy) => {
     enemy.posx = enemy.posx - (enemy.speed + enemy.acceleration); // 敵の位置更新
 
@@ -313,19 +440,11 @@ function playGame() {
       player.acceleration = 0;
     }
 
-    if (enemy.isAnimated && enemy.type === 'pteranodon') {
-      enemy.image.src = frameCnt <= 5 ? EnemyImages.enemy04 : EnemyImages.enemy05;
-    }
   });
-
-  // スコアカウンタ
-  scoreCount();
-  // フレームカウンタ
-  frameCounter();
 
   // dinoトコトコ
   if (player.posy < GameConfig.GROUND_LEVEL) {
-    // jump
+    // player is jumping
     player.image.src = CharacterImages.chrJump;
   } else {
     if (frameCnt <= 5) {
@@ -335,16 +454,31 @@ function playGame() {
     }
   }
 
+
   // トリ（プテラ）パタパタ
   enemies.forEach(enemy => {
+    // enemy.isAnimatedがtrueで、enemy.typeがpteranodonの場合にアニメーションを切り替える
     if (enemy.isAnimated && enemy.type === 'pteranodon') { 
-      if (frameCnt <= 5) {
+      if (frameCnt <= GameConfig.FRAME_ANIMATION_THRESHOLD) {
           enemy.image.src = EnemyImages.enemy04;
       } else {
           enemy.image.src = EnemyImages.enemy05;
       }
     }
   });
+
+  // 雲の更新
+  updateClouds();
+  // 地面の更新
+  updateGround();
+
+
+  // スコアカウンタ
+  scoreCount();
+  // フレームカウンタ
+  frameCounter();
+
+
 }
 
 function scoreCount() {
@@ -352,21 +486,14 @@ function scoreCount() {
   // スコアが上がる毎に敵の速度を上げる（上限あり）
   enemies.forEach(enemy => {
     enemy.acceleration = score / GameConfig.ENEMY_ACCEL_FACTOR;
-    enemy.speed = enemy.speed + enemy.acceleration;
+    
     // 速度が上限を超えないように制限
     if (enemy.speed > GameConfig.ENEMY_MAX_SPEED) {
       enemy.speed = GameConfig.ENEMY_MAX_SPEED;
     }
   });
 
-  // 地面も敵と同じ速度で更新
-  const currentGround = grounds[currentGroundIndex];
-  currentGround.acceleration = score / GameConfig.ENEMY_ACCEL_FACTOR;
-  currentGround.speed = currentGround.speed + currentGround.acceleration;
-  // 地面も速度上限を適用
-  if (currentGround.speed > GameConfig.ENEMY_MAX_SPEED) {
-    currentGround.speed = GameConfig.ENEMY_MAX_SPEED;
-  }
+
 }
 
 
