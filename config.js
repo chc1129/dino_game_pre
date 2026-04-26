@@ -97,3 +97,15 @@ const CloudConfig = {
   MIN_INTERVAL: 400, // 最小生成間隔
   MAX_INTERVAL: 800, // 最大生成間隔
 };
+
+
+// サウンド情報の設定
+const SoundFiles = {
+  scoreUp: "./sound/sound01.mp3", // スコアアップ時のサウンド
+}
+
+// サウンド関連の設定情報
+const SoundConfig = {
+  SCORE_UP_INTERVAL: 500, // スコアアップ音を鳴らす間隔
+}
+

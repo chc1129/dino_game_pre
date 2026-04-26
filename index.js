@@ -481,8 +481,26 @@ function playGame() {
 
 }
 
+// サウンド再生の共通処理
+function playSound(soundSrc) {
+  // Audioオブジェクトを生成し、サウンド再生
+  const audio = new Audio(soundSrc);
+
+  // 再生開始
+  audio.play().catch(e => {
+    // ブラウザのAutoPlay制限などで再生できない場合はコンソールに出力
+    console.error("サウンド再生エラー", e);
+  });
+}
+
 function scoreCount() {
   score++;
+
+  // scoreがSCORE_UP_INTERVALの倍数になったタイミングでサウンドを再生
+  if (score % SoundConfig.SCORE_UP_INTERVAL === 0) {
+    playScoreUp();
+  }
+
   // スコアが上がる毎に敵の速度を上げる（上限あり）
   enemies.forEach(enemy => {
     enemy.acceleration = score / GameConfig.ENEMY_ACCEL_FACTOR;
@@ -492,8 +510,12 @@ function scoreCount() {
       enemy.speed = GameConfig.ENEMY_MAX_SPEED;
     }
   });
+}
 
-
+// スコアアップ時のサウンド再生処理
+function playScoreUp() {
+  // 共通サウンド再生関数を経由して再生
+  playSound(SoundFiles.scoreUp);
 }
 
 

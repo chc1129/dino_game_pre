@@ -11,3 +11,17 @@ dino game preを作成
 
 ![playgame](img/play_game.gif)
 
+参考：
+Fix the Bits
+https://you-key69.hatenadiary.jp/entry/20220211/javascript-game-development
+
+ゆっくりコンピュータサイエンス
+https://www.youtube.com/watch?v=-y5OJA9z8bU
+
+ドット絵は以下サイトを利用して作成
+https://neutralx0.net/tools/dot3/
+
+スコアアップ音は以下サイトを利用
+https://soundeffect-lab.info/sound/button/ (決定ボタンを押す40)
+
+
