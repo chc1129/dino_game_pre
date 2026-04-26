@@ -109,6 +109,12 @@ function keydown(e) {
             player.speed        = GameConfig.PLAYER_JUMP_SPEED;
             player.acceleration = GameConfig.PLAYER_JUMP_ACCEL;
         }
+    } else if (scene === Scenes.GameOver) {
+        // GameOver時にスペース・エンターでリスタート
+        if (e.key === " " || e.key === "Enter") {
+            restart();
+            return;
+        }
     }
 }
 
@@ -155,6 +161,26 @@ function playGame() {
     // フレームカウンタ処理をコール
     frameCounter();
 }
+
+
+// ゲームリスタート処理
+// GameOver時のキー入力から呼び出される
+function restart() {
+    // 既存のアニメーションループをキャンセル
+    // キャンセルしないとloop()が多重起動してしまう
+    if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
+
+    //既存のinit()を利用してゲーム状態を初期化
+    // player・enemy・cloud・groundの初期化も内部で実施される
+    init();
+
+    // 既存のloop()を利用してゲームループを再起動
+    loop();
+}
+
 
 
 // スコアカウント・敵速度更新
