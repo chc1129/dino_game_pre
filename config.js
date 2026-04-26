@@ -14,10 +14,17 @@ const GameConfig = {
   ENEMY_INITIAL_SPEED: 10,
   ENEMY_MAX_SPEED: 30,  // 敵の最大速度
   ENEMY_ACCELERATION: 0,
-  ENEMY_ACCEL_FACTOR: 200,
+  ENEMY_ACCEL_FACTOR: 100000,
   FRAME_COUNTER_RESET:10,
   FRAME_ANIMATION_THRESHOLD:6,
   GAME_OVER_POS:250,
+};
+
+// シーン定義
+const Scenes = {
+  Title: "Title",
+  GameMain: "GameMain",
+  GameOver: "GameOver",
 };
 
 // Enemy types
